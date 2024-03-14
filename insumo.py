@@ -96,6 +96,14 @@ insumo = st.sidebar.selectbox("Selecione um insumo:", insumos, format_func=lambd
 df_old = df_old[(df_old["INSUMO"] == insumo)].reset_index(drop=True) 
 
 
+# ins_infs = sorted(list(df_old["INS_INF"].unique()))
+# ins_inf = st.sidebar.multiselect('Selecione o insumo informado:', ins_infs, placeholder = "Todas as opções")
+# if not ins_inf:
+#     df_old = df_old
+# else:
+#     df_old = df_old[df_old["TP_PRECO"].isin(ins_inf)].reset_index(drop=True) 
+
+
 tipo_precos = sorted(list(df_old["TP_PRECO"].unique()))
 tipo_preco = st.sidebar.multiselect('Selecione o tipo de preço:', tipo_precos, placeholder = "Todas as opções")
 if not tipo_preco:
@@ -171,10 +179,27 @@ if df_insinf[~df_insinf["limite_inferior_anterior"].isna()].shape[0] > 0:
     total_fora = len(df_insinf[df_insinf['dentro_limites'] == False])
     st.write(f"Total de preços um passo a frente: {total}")
     st.write(f"Total de preços um passo a frente dentro do intervalo de confiança: {total_dentro}")
-
+    st.write(f"Total de preços um passo a frente fora do intervalo de confiança: {total_fora}")
 
     st.write("### Preços que ficaram de fora da cerca")
     st.write(df_insinf[df_insinf['dentro_limites'] == False].sort_values(by='DATA_PRECO', ascending=False).drop(['LIMITE_SUPERIOR', 'LIMITE_INFERIOR','MEDIA_MOVEL','DESVIO_PADRAO'], axis=1))
+
+    st.write("### Tabela agregada")
+    df_agregado = df_old.groupby('INS_INF')['PRECO'].agg(['count', 'mean', 'std'])   
+    df_agregado['CV'] = df_agregado['std'] / df_agregado['mean']
+    df_foralimites = df_insinf[df_insinf['dentro_limites'] == False].groupby('INS_INF')['PRECO'].count()
+    df_agregado_final = pd.merge(df_agregado, df_foralimites, on = ['INS_INF'], how = 'left')
+    df_agregado_final.rename(columns={'count': 'Quantidade de Preços', 'mean': 'Média', 'std': 'Desvio Padrão', 'PRECO': 'Quantidade de Preços Fora da Cerca'}, inplace=True)
+    df_agregado_final['Quantidade de Preços Fora da Cerca'].fillna(0, inplace=True)
+    df_agregado_final = df_agregado_final[['Quantidade de Preços', 'Quantidade de Preços Fora da Cerca', 'Média', 'Desvio Padrão', 'CV']]
+    st.write(df_agregado_final)
+
+else:
+    st.write("### Tabela agregada")
+    df_agregado = df_old.groupby('INS_INF')['PRECO'].agg(['count', 'mean', 'std'])   
+    df_agregado['CV'] = df_agregado['std'] / df_agregado['mean']
+    df_agregado.rename(columns={'count': 'Quantidade de Preços', 'mean': 'Média', 'std': 'Desvio Padrão'}, inplace=True)
+    st.write(df_agregado)
 
 
 # st.write('old')
