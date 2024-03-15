@@ -96,12 +96,12 @@ insumo = st.sidebar.selectbox("Selecione um insumo:", insumos, format_func=lambd
 df_old = df_old[(df_old["INSUMO"] == insumo)].reset_index(drop=True) 
 
 
-# ins_infs = sorted(list(df_old["INS_INF"].unique()))
-# ins_inf = st.sidebar.multiselect('Selecione o insumo informado:', ins_infs, placeholder = "Todas as opções")
-# if not ins_inf:
-#     df_old = df_old
-# else:
-#     df_old = df_old[df_old["TP_PRECO"].isin(ins_inf)].reset_index(drop=True) 
+ins_infs = sorted(list(df_old["INS_INF"].unique()))
+ins_inf = st.sidebar.multiselect('Selecione o insumo informado:', ins_infs, placeholder = "Todas as opções")
+if not ins_inf:
+    df_old = df_old
+else:
+    df_old = df_old[df_old["INS_INF"].isin(ins_inf)].reset_index(drop=True) 
 
 
 tipo_precos = sorted(list(df_old["TP_PRECO"].unique()))
@@ -138,7 +138,7 @@ else:
 desvios = st.sidebar.slider("Desvios Padrão", min_value = 1.0, max_value = 4.0, step = 0.5, value = 2.5)
 
 ###
-
+st.write(df_old)
 # Filtrando os dados
 # df_old = df_old[(df_old["INSUMO"] == insumo) & df_old["TP_PRECO"].isin(tipo_preco) & df_old["TIPO_ESTABELECIMENTO"].isin(tipo_estabelecimento) & df_old["REGIAO"].isin(regiao) & df_old["UF"].isin(uf)].reset_index(drop=True) 
 
