@@ -138,10 +138,6 @@ else:
 desvios = st.sidebar.slider("Desvios Padrão", min_value = 1.0, max_value = 4.0, step = 0.5, value = 2.5)
 
 ###
-st.write(df_old)
-# Filtrando os dados
-# df_old = df_old[(df_old["INSUMO"] == insumo) & df_old["TP_PRECO"].isin(tipo_preco) & df_old["TIPO_ESTABELECIMENTO"].isin(tipo_estabelecimento) & df_old["REGIAO"].isin(regiao) & df_old["UF"].isin(uf)].reset_index(drop=True) 
-
 # Criação da mediana dos insumos
 df_old['MEDIANA_PRECO'] = df_old.groupby(['INSUMO', 'DATA_PRECO'])['PRECO'].transform('median')
 
@@ -162,9 +158,6 @@ df_insinf = pd.merge(df_old, df, on = ['INSUMO', 'DATA_PRECO'], how = 'left')
 df_insinf.drop(columns=['MEDIANA_PRECO_y', 'NM_INSUMO_y'], inplace=True)
 df_insinf.rename(columns={'MEDIANA_PRECO_x': 'MEDIANA_PRECO', 'NM_INSUMO_x': 'NM_INSUMO'}, inplace=True)
 
-# # Filtrando os dados
-# df_insinf = df_insinf[df_insinf["INSUMO"] == insumo & df_insinf["TP_PRECO"] in tipo_preco & df_insinf["TIPO_ESTABELECIMENTO"] in tipo_estabelecimento & df_insinf["REGIAO"] in regiao & df_insinf["UF"] in uf].reset_index(drop=True)
-
 # Verificando se o preço do insumo informado está dentro dos limites
 df_insinf = df_insinf.groupby('INSUMO').apply(verificar_limites).reset_index(drop=True)
 
@@ -178,8 +171,8 @@ if df_insinf[~df_insinf["limite_inferior_anterior"].isna()].shape[0] > 0:
     total_dentro = len(df_insinf[df_insinf['dentro_limites'] == True])
     total_fora = len(df_insinf[df_insinf['dentro_limites'] == False])
     st.write(f"Total de preços um passo a frente: {total}")
-    st.write(f"Total de preços um passo a frente dentro do intervalo de confiança: {total_dentro}")
-    st.write(f"Total de preços um passo a frente fora do intervalo de confiança: {total_fora}")
+    st.write(f"Total de preços um passo a frente <b>dentro</b> do intervalo de confiança: {total_dentro}", unsafe_allow_html=True)
+    st.write(f"Total de preços um passo a frente <b>fora</b> do intervalo de confiança: {total_fora}", unsafe_allow_html=True)
 
     st.write("### Preços que ficaram de fora da cerca")
     st.write(df_insinf[df_insinf['dentro_limites'] == False].sort_values(by='DATA_PRECO', ascending=False).drop(['LIMITE_SUPERIOR', 'LIMITE_INFERIOR','MEDIA_MOVEL','DESVIO_PADRAO'], axis=1))
