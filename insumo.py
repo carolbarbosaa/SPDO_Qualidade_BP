@@ -70,7 +70,7 @@ def plot(df_insinf, df):
 
         # Highlight prices outside the limit
         fig.add_scatter(x=df_insinf[df_insinf['dentro_limites'] == False]['DATA_PRECO'], y=df_insinf[df_insinf['dentro_limites'] == False]['PRECO'],
-                        mode='markers', name='Preços Fora do Limite', marker=dict(color='red'), text=["Insumo informado: {}".format(ins_inf) for ins_inf in df_insinf['INS_INF']], hoverinfo = ['text'])
+                        mode='markers', name='Preços Fora do Limite', marker=dict(color='red'), text=["Insumo informado: {}".format(ins_inf) for ins_inf in df_insinf[df_insinf['dentro_limites'] == False]['INS_INF']], hoverinfo = ['text'])
 
     else:
         fig = px.scatter(df_insinf, x=df_insinf['DATA_PRECO'], y=df_insinf['PRECO'], title='Gráfico de Dispersão com Médias e Limites', hover_data={'INS_INF': True})
