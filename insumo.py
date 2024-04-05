@@ -48,6 +48,14 @@ def process_data(df, n_desvios):
 
 def verificar_limites(df):
     # Verifica se o preço está dentro dos limites do dia anterior
+    # df['dentro_limites'] = ((df['PRECO'] >= df['limite_inferior_anterior']) & 
+    #                         (df['PRECO'] <= df['limite_superior_anterior']))
+
+    # # Substituir valores vazios por -inf e +inf para que seja consideradodentro dos limites os vazios
+    df['limite_inferior_anterior'].fillna(-float('inf'), inplace=True)
+    df['limite_superior_anterior'].fillna(float('inf'), inplace=True)
+
+    # Criando a coluna 'dentro_limites' com base na condição modificada
     df['dentro_limites'] = ((df['PRECO'] >= df['limite_inferior_anterior']) & 
                             (df['PRECO'] <= df['limite_superior_anterior']))
 
