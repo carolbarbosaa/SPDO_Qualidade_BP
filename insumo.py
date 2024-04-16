@@ -23,6 +23,11 @@ def read_data(file_path):
     # content["Preço"] = content["Preço"].round(decimals = 2)
     return df
 
+# def read_data(file_path):
+#     df = pd.read_excel(file_path, parse_dates=["DATA_PRECO"], dtype={"INS_INF": str, "INSUMO": str, "TP_PRECO": str, "PRECO": float})
+#     df.drop_duplicates(["INS_INF","DATA_PRECO"], inplace=True)
+#     return df
+
 @st.cache_data()
 def process_data(df, n_desvios):
 
@@ -246,9 +251,18 @@ if df_insinf[~df_insinf["limite_inferior_anterior"].isna()].shape[0] > 0:
     st.write(f"Total de preços um passo a frente <b>dentro</b> do intervalo de confiança: {total_dentro}", unsafe_allow_html=True)
     st.write(f"Total de preços um passo a frente <b>fora</b> do intervalo de confiança: {total_fora}", unsafe_allow_html=True)
 
-    st.write("### Preços que ficaram de fora da cerca")
-    st.write(df_insinf[df_insinf['dentro_limites'] == False].sort_values(by='DATA_PRECO', ascending=False).drop(['LIMITE_SUPERIOR', 'LIMITE_INFERIOR','MEDIA_MOVEL','DESVIO_PADRAO'], axis=1))
+    # st.write("### Preços que ficaram de fora da cerca")
+    # st.write(df_insinf[df_insinf['dentro_limites'] == False].sort_values(by='DATA_PRECO', ascending=False).drop(['LIMITE_SUPERIOR', 'LIMITE_INFERIOR','MEDIA_MOVEL','DESVIO_PADRAO'], axis=1))
 
+    # Verificando se há preços fora da cerca
+    fora_cerca_existe = False in df_insinf['dentro_limites'].values
+
+    # Exibindo os preços fora da cerca apenas se eles existirem
+    if fora_cerca_existe:
+        st.write("### Preços que ficaram de fora da cerca")
+        st.write(df_insinf[df_insinf['dentro_limites'] == False].sort_values(by='DATA_PRECO', ascending=False).drop(['LIMITE_SUPERIOR', 'LIMITE_INFERIOR','MEDIA_MOVEL','DESVIO_PADRAO'], axis=1))
+
+    # Exibindo estatísticas por insumo informado
     st.write("### Tabela agregada")
     df_agregado = df_old.groupby('INS_INF')['PRECO'].agg(['count', 'mean', 'std'])   
     df_agregado['CV'] = df_agregado['std'] / df_agregado['mean']
