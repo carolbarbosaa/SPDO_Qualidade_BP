@@ -20,12 +20,8 @@ def read_data(file_path):
     df = pd.read_csv(file_path, sep=",", encoding="utf-8", decimal=".", low_memory=False,
                      parse_dates=["DATA_PRECO"], dtype={"INS_INF": str, "INSUMO": str, "TP_PRECO": str, "PRECO": float, "INFORMANTE": str})
     df.drop_duplicates(["INS_INF","DATA_PRECO"], inplace=True)
+    # content["Preço"] = content["Preço"].round(decimals = 2)
     return df
-
-# def read_data(file_path):
-#     df = pd.read_excel(file_path, parse_dates=["DATA_PRECO"], dtype={"INS_INF": str, "INSUMO": str, "TP_PRECO": str, "PRECO": float})
-#     df.drop_duplicates(["INS_INF","DATA_PRECO"], inplace=True)
-#     return df
 
 @st.cache_data()
 def process_data(df, n_desvios):
@@ -51,6 +47,12 @@ def verificar_limites(df):
     # df['dentro_limites'] = ((df['PRECO'] >= df['limite_inferior_anterior']) & 
     #                         (df['PRECO'] <= df['limite_superior_anterior']))
 
+    df["PRECO"] = df["PRECO"].round(decimals = 2)
+    df["LIMITE_INFERIOR"] = df["limite_inferior_anterior"].round(decimals = 2)
+    df["LIMITE_SUPERIOR"] = df["limite_superior_anterior"].round(decimals = 2)
+    df["limite_inferior_anterior"] = df["limite_inferior_anterior"].round(decimals = 2)
+    df["limite_superior_anterior"] = df["limite_superior_anterior"].round(decimals = 2)
+
     # # Substituir valores vazios por -inf e +inf para que seja consideradodentro dos limites os vazios
     df['limite_inferior_anterior'].fillna(-float('inf'), inplace=True)
     df['limite_superior_anterior'].fillna(float('inf'), inplace=True)
@@ -61,6 +63,31 @@ def verificar_limites(df):
 
     return df
 
+# def plot(df_insinf, df):
+    
+#     # Verificando se há informações sobre limite superior e inferior anterior
+#     if df_insinf[~df_insinf["limite_inferior_anterior"].isna()].shape[0] > 0:
+#         # Create the scatter plot
+#         df_insinf_dentro = df_insinf[df_insinf['dentro_limites'] == True]
+#         fig = px.scatter(df_insinf_dentro, x=df_insinf_dentro['DATA_PRECO'], y=df_insinf_dentro['PRECO'], title='Gráfico de Dispersão com Médias e Limites', hover_data={'INS_INF': True})
+
+#         # Add moving average line
+#         fig.add_scatter(x=df['DATA_PRECO'], y=df['MEDIA_MOVEL'].shift(1), mode='lines', name='Média Móvel')
+
+#         # Add lower and upper limit lines
+#         fig.add_scatter(x=df['DATA_PRECO'], y=df['LIMITE_INFERIOR'].shift(1), mode='lines', fill='tonexty', name='Limite Inferior')
+#         fig.add_scatter(x=df['DATA_PRECO'], y=df['LIMITE_SUPERIOR'].shift(1), mode='lines', fill='tonexty', name='Limite Superior')
+
+#         # Highlight prices outside the limit
+#         fig.add_scatter(x=df_insinf[df_insinf['dentro_limites'] == False]['DATA_PRECO'], y=df_insinf[df_insinf['dentro_limites'] == False]['PRECO'],
+#                         mode='markers', name='Preços Fora do Limite', marker=dict(color='red'), text=["Insumo informado: {}".format(ins_inf) for ins_inf in df_insinf[df_insinf['dentro_limites'] == False]['INS_INF']], hoverinfo = ['text'])
+
+
+#     else:
+#         fig = px.scatter(df_insinf, x=df_insinf['DATA_PRECO'], y=df_insinf['PRECO'], title='Gráfico de Dispersão com Médias e Limites', hover_data={'INS_INF': True})
+
+#     return fig
+
 def plot(df_insinf, df):
     
     # Verificando se há informações sobre limite superior e inferior anterior
@@ -69,16 +96,53 @@ def plot(df_insinf, df):
         df_insinf_dentro = df_insinf[df_insinf['dentro_limites'] == True]
         fig = px.scatter(df_insinf_dentro, x=df_insinf_dentro['DATA_PRECO'], y=df_insinf_dentro['PRECO'], title='Gráfico de Dispersão com Médias e Limites', hover_data={'INS_INF': True})
 
+        
         # Add moving average line
         fig.add_scatter(x=df['DATA_PRECO'], y=df['MEDIA_MOVEL'].shift(1), mode='lines', name='Média Móvel')
 
         # Add lower and upper limit lines
-        fig.add_scatter(x=df['DATA_PRECO'], y=df['LIMITE_INFERIOR'].shift(1), mode='lines', fill='tonexty', name='Limite Inferior')
-        fig.add_scatter(x=df['DATA_PRECO'], y=df['LIMITE_SUPERIOR'].shift(1), mode='lines', fill='tonexty', name='Limite Superior')
+        # fig.add_scatter(x=df['DATA_PRECO'], y=df['LIMITE_INFERIOR'].shift(1), mode='lines', fill='tonexty', name='Limite Inferior')
+        # fig.add_scatter(x=df['DATA_PRECO'], y=df['LIMITE_SUPERIOR'].shift(1), mode='lines', fill='tonexty', name='Limite Superior')
+
+        fig.add_scatter(x=df['DATA_PRECO'], y=df['LIMITE_INFERIOR'].shift(1), mode='lines', fill='tonexty', fillcolor='rgba(255, 0, 0, 0.4)', line=dict(color='rgba(200, 0, 0, 0.5)'), name='Limite Inferior')
+        fig.add_scatter(x=df['DATA_PRECO'], y=df['LIMITE_SUPERIOR'].shift(1), mode='lines', fill='tonexty', fillcolor='rgba(255, 29, 0, 0.15)', line=dict(color='rgba(200, 0, 0, 0.2)'), name='Limite Superior')
+        
+        # Add text for prices within the limit
+        fig.add_trace(go.Scatter(x=df_insinf[df_insinf['dentro_limites'] == True]['DATA_PRECO'], 
+                                 y=df_insinf[df_insinf['dentro_limites'] == True]['PRECO'],
+                                 mode='markers',
+                                 name='Preços Dentro do Limite',
+                                 marker=dict(color='rgba(0, 0, 255, 1)', size=6),  # Definindo o tamanho dos marcadores
+                                 text=["<b>PREÇO DENTRO</b><br>Insumo informado: {}<br>Data: {}<br>Preço: {}".format(ins_inf, data.strftime('%d-%m-%Y'), preco) 
+                                       for ins_inf, data, preco in zip(df_insinf[df_insinf['dentro_limites'] == True]['INS_INF'], 
+                                                                       df_insinf[df_insinf['dentro_limites'] == True]['DATA_PRECO'],
+                                                                       df_insinf[df_insinf['dentro_limites'] == True]['PRECO'])],
+                                 hoverinfo='text'))
+
 
         # Highlight prices outside the limit
-        fig.add_scatter(x=df_insinf[df_insinf['dentro_limites'] == False]['DATA_PRECO'], y=df_insinf[df_insinf['dentro_limites'] == False]['PRECO'],
-                        mode='markers', name='Preços Fora do Limite', marker=dict(color='red'), text=["Insumo informado: {}".format(ins_inf) for ins_inf in df_insinf[df_insinf['dentro_limites'] == False]['INS_INF']], hoverinfo = ['text'])
+        # fig.add_trace(go.Scatter(x=df_insinf[df_insinf['dentro_limites'] == False]['DATA_PRECO'], 
+        #                 y=df_insinf[df_insinf['dentro_limites'] == False]['PRECO'],
+        #                 mode='markers',
+        #                 name='Preços Fora do Limite',
+        #                 marker=dict(color='red', size=6),  # Definindo o tamanho dos marcadores
+        #                 text=["Insumo informado: {}<br>Data: {}<br>Preço: {}".format(ins_inf, data.strftime('%d-%m-%Y'), preco) 
+        #                        for ins_inf, data, preco in zip(df_insinf[(df_insinf['PRECO'] < df_insinf['LIMITE_INFERIOR'].shift(1)) | (df_insinf['PRECO'] > df_insinf['LIMITE_SUPERIOR'].shift(1))]['INS_INF'], 
+        #                                                        df_insinf[(df_insinf['PRECO'] < df_insinf['LIMITE_INFERIOR'].shift(1)) | (df_insinf['PRECO'] > df_insinf['LIMITE_SUPERIOR'].shift(1))]['DATA_PRECO'],
+        #                                                        df_insinf[(df_insinf['PRECO'] < df_insinf['LIMITE_INFERIOR'].shift(1)) | (df_insinf['PRECO'] > df_insinf['LIMITE_SUPERIOR'].shift(1))]['PRECO'])],
+        #                  hoverinfo='text'))
+
+        fig.add_trace(go.Scatter(x=df_insinf[df_insinf['dentro_limites'] == False]['DATA_PRECO'], 
+                        y=df_insinf[df_insinf['dentro_limites'] == False]['PRECO'],
+                        mode='markers',
+                        name='Preços Fora do Limite',
+                        marker=dict(color='red', size=6),  # Definindo o tamanho dos marcadores
+                        text=["<b>PREÇO FORA</b><br>Insumo informado: {}<br>Data: {}<br>Preço: {}".format(ins_inf, data.strftime('%d-%m-%Y'), preco) 
+                               for ins_inf, data, preco in zip(df_insinf[df_insinf['dentro_limites'] == False]['INS_INF'],  
+                                                               df_insinf[df_insinf['dentro_limites'] == False]['DATA_PRECO'],
+                                                               df_insinf[df_insinf['dentro_limites'] == False]['PRECO'])],
+                         hoverinfo='text'))        
+
 
     else:
         fig = px.scatter(df_insinf, x=df_insinf['DATA_PRECO'], y=df_insinf['PRECO'], title='Gráfico de Dispersão com Médias e Limites', hover_data={'INS_INF': True})
@@ -211,3 +275,4 @@ else:
 # st.write(df)
 # st.write('insinf')
 # st.write(df_insinf)
+
