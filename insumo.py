@@ -157,7 +157,7 @@ def plot(df_insinf, df):
 
 
 # Chamar a função para carregar e processar os dados
-df_old = read_data(data_path / "CRITICA BP_PILOTO.csv")
+df_old = read_data(data_path / "CRITICA BP.csv")
 
 # Ordena os dados por insumo e data
 df_old.sort_values(by=['INSUMO', 'DATA_PRECO'], ascending=[True, True], inplace=True)
