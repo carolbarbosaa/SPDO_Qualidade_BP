@@ -238,6 +238,9 @@ df_insinf.rename(columns={'MEDIANA_PRECO_x': 'MEDIANA_PRECO', 'NM_INSUMO_x': 'NM
 # Verificando se o preço do insumo informado está dentro dos limites
 df_insinf = df_insinf.groupby('INSUMO').apply(verificar_limites).reset_index(drop=True)
 
+st.write("### Tabela de Preços")
+st.write(df_insinf.drop(['LIMITE_SUPERIOR', 'LIMITE_INFERIOR'], axis = 1))
+
 # Criando o gráfico
 fig = plot(df_insinf, df)
 st.plotly_chart(fig, use_container_width=True)
